@@ -1,0 +1,109 @@
+<div class="app-frame" [class.dark-theme]="store.darkMode()">
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" href="#overview" (click)="setPage('Overview')" aria-label="Subsense home">
+      <svg class="brand-mark" viewBox="0 0 36 34" aria-hidden="true"><path d="M8.4 1.8c4.5-1.4 8.7 1.1 10.1 5.5l3.9 12.2c1.5 4.6-.9 9.1-5.5 10.6-4.5 1.4-8.8-1.1-10.2-5.6L2.8 12.4C1.4 7.9 3.8 3.3 8.4 1.8Z"/><path d="M27.6 1.8c-4.5-1.4-8.7 1.1-10.1 5.5l-3.9 12.2c-1.5 4.6.9 9.1 5.5 10.6 4.5 1.4 8.8-1.1 10.2-5.6l3.9-12.1c1.4-4.5-1-9.1-5.6-10.6Z"/></svg>
+      <span>Subsense</span>
+    </a>
+
+    <div class="sidebar-label">WORKSPACE</div>
+    <nav class="nav-list">
+      @for (item of navItems; track item.name) {
+        <button class="nav-link" [class.active]="page() === item.name" (click)="setPage(item.name)">
+          @switch (item.icon) {
+            @case ('grid') { <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> }
+            @case ('card') { <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></svg> }
+            @case ('chart') { <svg viewBox="0 0 24 24"><path d="M4 20V10m8 10V4m8 16v-7M2 20h20"/></svg> }
+            @case ('bell') { <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg> }
+          }
+          <span>{{ item.name }}</span>
+          @if (item.name === 'Subscriptions') { <span class="nav-count">{{ store.subscriptions().length }}</span> }
+          @if (item.name === 'Reminders' && store.subscriptions().some(s => s.reminder)) { <span class="nav-dot"></span> }
+        </button>
+      }
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+    <button class="reminder-promo" (click)="setPage('Reminders')">
+      <span class="promo-icon"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg></span>
+      <strong>Never miss a renewal</strong><span>We’ll remind you before every charge.</span>
+    </button>
+    <button class="nav-link settings-link" [class.active]="page() === 'Settings'" (click)="setPage('Settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a1.8 1.8 0 1 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .9v.2a1.8 1.8 0 1 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.9l-.1.1a1.8 1.8 0 1 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.9-3h-.2a1.8 1.8 0 1 1 0-3.6h.2a1.8 1.8 0 0 0 .9-3l-.1-.1a1.8 1.8 0 1 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.9v-.2a1.8 1.8 0 1 1 3.6 0v.2a1.8 1.8 0 0 0 3 .9l.1-.1a1.8 1.8 0 1 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .9 3h.2a1.8 1.8 0 1 1 0 3.6h-.2a1.8 1.8 0 0 0-.9 3Z"/></svg>
+      <span>Settings</span>
+    </button>
+    <button class="profile-button" (click)="showProfileMenu.update(v => !v)">
+      <span class="avatar">AM</span><span class="profile-copy"><strong>Alex Morgan</strong><small>alex&#64;example.com</small></span>
+      <span class="profile-more">···</span>
+      @if (showProfileMenu()) { <span class="profile-menu" (click)="$event.stopPropagation()"><strong>Alex Morgan</strong><small>Demo profile · no account connected</small><button (click)="notify('Authentication is not part of this preview')">Sign in (preview only)</button><button (click)="notify('You are viewing the signed-out demo')">Log out (preview)</button></span> }
+    </button>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <div class="greeting"><span>{{ todayLabel }}</span><h1>{{ heading }}</h1></div>
+      <div class="top-actions">
+        <label class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 4.5 4.5"/></svg><input aria-label="Search subscriptions" placeholder="Search subscriptions..." [ngModel]="query()" (ngModelChange)="query.set($event)"></label>
+        <div class="notification-wrap">
+          <button class="icon-button notification-button" aria-label="Notifications" (click)="showNotifications.update(v => !v)"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg><i></i></button>
+          @if (showNotifications()) { <div class="notification-popover"><strong>Coming up</strong><span>{{ dueSoon().length }} renewals in the next 3 weeks</span><button (click)="setPage('Reminders');showNotifications.set(false)">View reminders</button></div> }
+        </div>
+        <button class="button button-primary add-button" (click)="showAddModal.set(true)"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Add subscription</span></button>
+      </div>
+    </header>
+
+    <div class="content">
+      @if (page() === 'Overview') {
+        <section class="stats-grid" aria-label="Subscription summary">
+          <article class="stat-card stat-dark"><div class="stat-top"><span>Monthly spend</span><span class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18m-14 5h3"/></svg></span></div><div class="stat-value">{{ currency(monthlySpend()) }}</div><div class="stat-foot"><span class="trend-pill">↘ 4.2%</span><span>from last month</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Active subscriptions</span><span class="stat-icon stat-icon-purple"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span></div><div class="stat-value">{{ store.subscriptions().length }}</div><div class="stat-foot"><strong>{{ monthlyCount }} monthly</strong><span> · {{ yearlyCount }} annual</span></div></article>
+          <article class="stat-card"><div class="stat-top"><span>Next payment</span><span class="stat-icon stat-icon-peach"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span></div><div class="stat-value">{{ currency(nextSubscription()?.amount ?? 0) }}</div><div class="stat-foot next-payment"><i></i><strong>{{ nextSubscription()?.name || 'All caught up' }}</strong><span>{{ nextSubscription() ? 'in ' + daysUntil(nextSubscription()!.nextCharge) + ' days' : '' }}</span></div></article>
+        </section>
+
+        <section class="due-section">
+          <div class="section-heading"><div><h2>Due soon</h2><p>Your upcoming charges, at a glance.</p></div><button class="text-link" (click)="setPage('Subscriptions');selectFilter('Due soon')">View calendar <span>→</span></button></div>
+          <div class="due-grid">
+            @for (item of dueSoon().slice(0, 3); track item.id) {
+              <article class="due-card"><div class="due-main"><span class="service-logo" [style.background]="item.color" [class.logo-light]="item.color === '#f1eee7'">{{ item.initial }}</span><span class="service-name"><strong>{{ item.name }}</strong><small>{{ item.category }}</small></span><span class="due-price"><strong>{{ currency(item.amount) }}</strong><small>{{ item.cycle }}</small></span></div><div class="due-meta"><span>{{ dateLabel(item.nextCharge) }}</span><span class="due-pill" [class.urgent]="daysUntil(item.nextCharge) <= 3" [class.warning]="daysUntil(item.nextCharge) > 3 && daysUntil(item.nextCharge) <= 7">{{ dueLabel(item) }}</span></div></article>
+            } @empty { <div class="empty-card">Nothing due soon. Enjoy the breathing room.</div> }
+          </div>
+        </section>
+
+        <section class="subscription-panel panel">
+          <div class="panel-heading"><div><h2>Your subscriptions</h2><p>Everything you’re currently paying for.</p></div><div class="filters">@for (category of categories; track category) { <button [class.selected]="filter() === category" (click)="selectFilter(category)">{{ category }}</button> }</div></div>
+          <div class="table-scroll"><table><thead><tr><th>SUBSCRIPTION</th><th>NEXT CHARGE</th><th>BILLING</th><th>REMINDER</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody>
+            @for (item of filteredSubscriptions(); track item.id) {
+              <tr><td><div class="table-service"><span class="service-logo" [style.background]="item.color" [class.logo-light]="item.color === '#f1eee7'">{{ item.initial }}</span><span><strong>{{ item.name }}</strong><small>{{ item.category }}</small></span></div></td><td><strong>{{ dateLabel(item.nextCharge) }}</strong><small>{{ dueLabel(item) }}</small></td><td><strong>{{ currency(item.amount) }}</strong><small>{{ item.cycle }}</small></td><td><button class="toggle-row" [class.on]="item.reminder" [attr.aria-label]="(item.reminder ? 'Turn off' : 'Turn on') + ' reminder for ' + item.name" (click)="changeReminder(item)"><span></span></button><span class="toggle-label">{{ item.reminder ? 'On' : 'Off' }}</span></td><td><div class="row-actions"><button class="row-more" [attr.aria-label]="'Open account page for ' + item.name" title="Open account / cancellation page" (click)="openProvider(item)">↗</button><button class="row-more remove-action" [attr.aria-label]="'Remove ' + item.name" title="Remove subscription" (click)="deleteSubscription(item)">···</button></div></td></tr>
+            } @empty { <tr><td colspan="5" class="empty-row">No subscriptions match this filter.</td></tr> }
+          </tbody></table></div>
+          <div class="panel-footer"><span>Showing {{ filteredSubscriptions().length }} of {{ store.subscriptions().length }} subscriptions</span><button class="text-link" (click)="setPage('Subscriptions')">See all <span>→</span></button></div>
+        </section>
+
+        <section class="insight-grid">
+          <article class="panel forecast-panel"><div class="forecast-title"><div><span class="eyebrow">SPENDING FORECAST</span><h2>Your year at a glance</h2></div><span class="year-chip">2026</span></div><div class="chart-area"><div class="annual-spend"><small>Estimated annual spend</small><strong>{{ currency(monthlySpend() * 12) }}</strong></div><div class="bar-chart" aria-label="Monthly spending forecast">@for (bar of chartBars; track $index) { <span [style.height.%]="bar" [class.current]="$index === currentMonth"></span> }</div></div><div class="forecast-note"><span>↓</span> You’re projected to spend <strong>{{ currency(124) }} less</strong> than last year.</div></article>
+          <article class="panel budget-panel"><span class="eyebrow">BUDGET HEALTH</span><h2>Monthly limit</h2><div class="budget-amount"><strong>{{ currency(monthlySpend()) }}</strong><span>/ {{ currency(store.monthlyBudget()) }}</span></div><div class="progress-track"><span [style.width.%]="budgetPercent"></span></div><small class="budget-left">{{ currency(Math.max(0, store.monthlyBudget() - monthlySpend())) }} left to spend this month</small><div class="category-highlight"><span class="category-dot"></span><span><strong>Entertainment</strong><small>Largest category</small></span><strong>{{ currency(entertainmentSpend) }}</strong></div></article>
+        </section>
+      } @else if (page() === 'Subscriptions' || page() === 'Reminders') {
+        <section class="page-intro"><div><span class="eyebrow">{{ page() === 'Reminders' ? 'STAY ONE STEP AHEAD' : 'YOUR RECURRING SPEND' }}</span><h2>{{ page() === 'Reminders' ? 'Renewal reminders' : 'All subscriptions' }}</h2><p>{{ page() === 'Reminders' ? 'Choose which renewals you want a heads up about.' : 'Manage your services and keep every renewal in view.' }}</p></div><button class="button button-primary" (click)="showAddModal.set(true)"><span>＋</span> Add subscription</button></section>
+        <section class="panel subscription-panel full-list"><div class="panel-heading"><div><h2>{{ page() === 'Reminders' ? 'Reminder settings' : 'Your subscriptions' }}</h2><p>{{ filteredSubscriptions().length }} active service{{ filteredSubscriptions().length === 1 ? '' : 's' }}</p></div><div class="filters">@for (category of categories; track category) { <button [class.selected]="filter() === category" (click)="selectFilter(category)">{{ category }}</button> }</div></div>
+          <div class="table-scroll"><table><thead><tr><th>SUBSCRIPTION</th><th>NEXT CHARGE</th><th>BILLING</th><th>REMINDER</th><th>ACTION</th></tr></thead><tbody>@for (item of filteredSubscriptions(); track item.id) {<tr><td><div class="table-service"><span class="service-logo" [style.background]="item.color" [class.logo-light]="item.color === '#f1eee7'">{{ item.initial }}</span><span><strong>{{ item.name }}</strong><small>{{ item.category }}</small></span></div></td><td><strong>{{ dateLabel(item.nextCharge) }}</strong><small>{{ dueLabel(item) }}</small></td><td><strong>{{ currency(item.amount) }}</strong><small>{{ item.cycle }}</small></td><td><button class="toggle-row" [class.on]="item.reminder" [attr.aria-label]="'Toggle reminder for ' + item.name" (click)="changeReminder(item)"><span></span></button><span class="toggle-label">{{ item.reminder ? 'On' : 'Off' }}</span></td><td><button class="table-link" (click)="openProvider(item)">Manage ↗</button><button class="remove-inline" (click)="deleteSubscription(item)">Remove</button></td></tr>} @empty {<tr><td colspan="5" class="empty-row">No matching subscriptions.</td></tr>}</tbody></table></div></section>
+      } @else if (page() === 'Insights') {
+        <section class="page-intro"><div><span class="eyebrow">MAKE YOUR SPENDING MAKE SENSE</span><h2>Spending insights</h2><p>A clearer picture of where your recurring money goes.</p></div><span class="year-chip">2026 overview</span></section>
+        <section class="stats-grid insight-stats"><article class="stat-card stat-dark"><div class="stat-top"><span>Monthly equivalent</span><span class="stat-icon">$</span></div><div class="stat-value">{{ currency(monthlySpend()) }}</div><div class="stat-foot">Across {{ store.subscriptions().length }} active subscriptions</div></article><article class="stat-card"><div class="stat-top"><span>Annual commitment</span><span class="stat-icon stat-icon-purple">↗</span></div><div class="stat-value">{{ currency(monthlySpend() * 12) }}</div><div class="stat-foot">If every subscription renews</div></article><article class="stat-card"><div class="stat-top"><span>Budget remaining</span><span class="stat-icon stat-icon-peach">◎</span></div><div class="stat-value">{{ currency(Math.max(0, store.monthlyBudget() - monthlySpend())) }}</div><div class="stat-foot">of {{ currency(store.monthlyBudget()) }} monthly limit</div></article></section>
+        <section class="insight-grid"><article class="panel forecast-panel"><span class="eyebrow">SPENDING FORECAST</span><h2>Your year at a glance</h2><div class="chart-area"><div class="annual-spend"><small>Estimated annual spend</small><strong>{{ currency(monthlySpend() * 12) }}</strong></div><div class="bar-chart">@for (bar of chartBars; track $index) { <span [style.height.%]="bar" [class.current]="$index === currentMonth"></span> }</div></div><div class="forecast-note"><span>↓</span> Your recurring spend is organized in one place.</div></article><article class="panel budget-panel"><span class="eyebrow">CATEGORY BREAKDOWN</span><h2>Where it goes</h2>@for (category of categorySummary; track category.name) {<div class="category-row"><span>{{ category.name }}</span><strong>{{ currency(category.amount) }}</strong><div class="progress-track"><span [style.width.%]="category.amount / Math.max(monthlySpend(), 1) * 100"></span></div></div>}</article></section>
+      } @else {
+        <section class="page-intro"><div><span class="eyebrow">MAKE SUBSENSE YOURS</span><h2>Settings</h2><p>Fine tune your budget, theme, and reminders.</p></div></section>
+        <section class="settings-layout"><article class="panel settings-card"><div class="settings-heading"><span class="settings-symbol purple">◷</span><div><h3>Monthly budget</h3><p>Keep your recurring spending within a limit that feels right.</p></div></div><label class="setting-label" for="budget">Your monthly limit</label><div class="budget-input-row"><span>$</span><input id="budget" type="number" min="1" step="1" [ngModel]="budgetInput()" (ngModelChange)="budgetInput.set($event)"><button class="button button-primary" (click)="saveBudget()">Save budget</button></div><small class="settings-hint">Current spend: {{ currency(monthlySpend()) }} per month</small></article>
+          <article class="panel settings-card"><div class="settings-heading"><span class="settings-symbol yellow">☼</span><div><h3>Appearance</h3><p>Choose the look that feels comfortable to you.</p></div></div><div class="setting-option"><span><strong>Dark theme</strong><small>Switch to a softer, low-light palette.</small></span><button class="toggle-row" [class.on]="store.darkMode()" aria-label="Toggle dark theme" (click)="store.toggleTheme()"><span></span></button></div></article>
+          <article class="panel settings-card"><div class="settings-heading"><span class="settings-symbol peach">♧</span><div><h3>Renewal reminders</h3><p>Manage alerts for each subscription from the Reminders page.</p></div></div><button class="button button-secondary" (click)="setPage('Reminders')">Manage reminders <span>→</span></button></article>
+          <article class="panel settings-card"><div class="settings-heading"><span class="settings-symbol purple">i</span><div><h3>About this preview</h3><p>Your data is stored in this browser. No sign in or billing connections are active.</p></div></div><button class="button button-secondary" (click)="notify('You’re using the Subsense local preview')">Preview status <span>✓</span></button></article>
+        </section>
+      }
+      <footer class="app-footer"><span>© 2026 Subsense</span><span>Know what you pay. Keep what you love.</span><button (click)="setPage('Settings')">Settings</button></footer>
+    </div>
+  </main>
+
+  @if (showAddModal()) {
+    <div class="modal-backdrop" (click)="showAddModal.set(false)"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title" (click)="$event.stopPropagation()"><div class="modal-heading"><div><span class="eyebrow">KEEP IT ALL TOGETHER</span><h2 id="add-title">Add a subscription</h2><p>We’ll help you keep an eye on the next renewal.</p></div><button class="close-button" aria-label="Close dialog" (click)="showAddModal.set(false)">×</button></div><form #subscriptionForm="ngForm" (ngSubmit)="addSubscription(subscriptionForm.value)"><label>Service name<input name="name" ngModel required placeholder="e.g. YouTube Premium"></label><div class="form-row"><label>Monthly or yearly cost<input name="amount" ngModel required type="number" min="0.01" step="0.01" placeholder="9.99"></label><label>Billing cycle<select name="cycle" ngModel="Monthly"><option>Monthly</option><option>Yearly</option></select></label></div><div class="form-row"><label>Category<select name="category" ngModel="Entertainment"><option>Entertainment</option><option>Productivity</option><option>Design</option><option>Utilities</option><option>Family</option><option>Other</option></select></label><label>Next renewal<input name="nextCharge" ngModel required type="date"></label></div><label>Account or cancellation link <span class="optional">(optional)</span><input name="website" ngModel type="url" placeholder="https://service.com/account"></label><label class="check-label"><input type="checkbox" name="reminder" ngModel="true"><span>Remind me before this subscription renews</span></label><div class="modal-actions"><button type="button" class="button button-secondary" (click)="showAddModal.set(false)">Cancel</button><button class="button button-primary" [disabled]="subscriptionForm.invalid" type="submit">Add subscription</button></div></form></section></div>
+  }
+  @if (toast()) { <div class="toast" role="status"><span>✓</span>{{ toast() }}</div> }
+</div>
