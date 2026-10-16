@@ -3,14 +3,18 @@ import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription, SubscriptionCategory, SubscriptionDraft } from './core/subscription.model';
 import { SubscriptionStore } from './core/subscription.store';
+import { PlanId } from './core/plan.model';
+import { PlanStore } from './core/plan.store';
+import { PlansPageComponent } from './features/plans/plans-page.component';
+import { FamilyReviewComponent } from './features/review/family-review.component';
 
-type Page = 'Overview' | 'Subscriptions' | 'Insights' | 'Reminders' | 'Settings';
+type Page = 'Overview' | 'Subscriptions' | 'Insights' | 'Reminders' | 'Family review' | 'Plans' | 'Settings';
 type Filter = 'All' | 'Due soon' | SubscriptionCategory;
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PlansPageComponent, FamilyReviewComponent],
   templateUrl: './app.component.html'
 })
 export class AppComponent {
@@ -28,7 +32,8 @@ export class AppComponent {
   readonly categories: Filter[] = ['All', 'Due soon', 'Productivity', 'Entertainment'];
   readonly navItems: { name: Page; icon: string }[] = [
     { name: 'Overview', icon: 'grid' }, { name: 'Subscriptions', icon: 'card' },
-    { name: 'Insights', icon: 'chart' }, { name: 'Reminders', icon: 'bell' }
+    { name: 'Insights', icon: 'chart' }, { name: 'Reminders', icon: 'bell' },
+    { name: 'Family review', icon: 'review' }, { name: 'Plans', icon: 'plans' }
   ];
   readonly monthlySpend = computed(() => this.store.subscriptions().reduce((sum, item) => sum + this.monthlyAmount(item), 0));
   readonly filteredSubscriptions = computed(() => {
@@ -60,10 +65,23 @@ export class AppComponent {
     return [...totals.entries()].map(([name, amount]) => ({ name, amount })).sort((a, b) => b.amount - a.amount);
   }
 
-  constructor(readonly store: SubscriptionStore) { this.budgetInput.set(String(store.monthlyBudget())); }
+  constructor(readonly store: SubscriptionStore, readonly planStore: PlanStore) { this.budgetInput.set(String(store.monthlyBudget())); }
 
   setPage(page: Page): void { this.page.set(page); if (page !== 'Subscriptions') this.filter.set('All'); }
   selectFilter(filter: Filter): void { this.filter.set(filter); this.page.set('Subscriptions'); }
+  openAddSubscription(): void {
+    if (this.planStore.currentPlan() === 'free' && this.store.subscriptions().length >= 5) {
+      this.setPage('Plans');
+      this.notify('Free includes up to 5 subscriptions. Choose a plan to add more.');
+      return;
+    }
+    this.showAddModal.set(true);
+  }
+  onPlanActivated(plan: PlanId): void {
+    const destination = plan === 'family' ? 'Family review' : 'Overview';
+    this.setPage(destination);
+    this.notify(`${plan === 'lifetime' ? 'Lifetime Plus' : plan[0].toUpperCase() + plan.slice(1)} enabled for this preview`);
+  }
   monthlyAmount(item: Subscription): number { return item.cycle === 'Yearly' ? item.amount / 12 : item.amount; }
   daysUntil(date: string): number {
     const today = new Date(); today.setHours(0, 0, 0, 0);

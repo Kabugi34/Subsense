@@ -1,0 +1,33 @@
+<section class="plans-page">
+  <div class="plans-intro">
+    <span class="eyebrow">SIMPLE PLANS, CLEAR VALUE</span>
+    <h2>Spend less on subscriptions.<br><em>Keep more for yourself.</em></h2>
+    <p>Start free. Upgrade when Subsense helps your household save more than it costs.</p>
+  </div>
+
+  <div class="billing-switch" aria-label="Billing period">
+    <button [class.selected]="period() === 'yearly'" (click)="period.set('yearly')">Yearly <span>Save with annual</span></button>
+    <button [class.selected]="period() === 'monthly'" (click)="period.set('monthly')">Monthly</button>
+  </div>
+
+  <div class="plan-grid">
+    @for (plan of plans.planDefinitions; track plan.id) {
+      <article class="plan-card" [class.plan-featured]="plan.id === 'family'" [class.plan-current]="plans.currentPlan() === plan.id">
+        @if (plan.badge) { <span class="plan-badge">{{ plan.badge }}</span> }
+        @if (plans.currentPlan() === plan.id) { <span class="current-plan-label">YOUR PLAN</span> }
+        <h3>{{ plan.name }}</h3>
+        <p class="plan-description">{{ plan.description }}</p>
+        <div class="plan-price"><strong>{{ price(plan) }}</strong><span>{{ cadence(plan) }}</span></div>
+        @if (monthlyEquivalent(plan); as equivalent) { <small class="plan-equivalent">{{ equivalent }}</small> }
+        <button class="button" [class.button-primary]="plan.id === 'family' || plans.currentPlan() === plan.id" [class.button-secondary]="plan.id !== 'family' && plans.currentPlan() !== plan.id" [disabled]="plans.currentPlan() === plan.id" (click)="choose(plan)">
+          {{ plans.currentPlan() === plan.id ? 'Current plan' : plan.id === 'free' ? 'Use Free' : plan.id === 'lifetime' ? 'Get Lifetime' : 'Choose ' + plan.name }}
+        </button>
+        <span class="plan-includes">{{ plan.id === 'family' ? 'Everything in Plus, and:' : plan.id === 'lifetime' ? 'Personal features:' : 'Included:' }}</span>
+        <ul>@for (feature of plan.features; track feature) { <li><span>✓</span>{{ feature }}</li> }</ul>
+      </article>
+    }
+  </div>
+
+  <div class="lifetime-note"><span class="lifetime-icon">∞</span><div><strong>Lifetime is for the solo organizer.</strong><p>One payment unlocks personal Plus features. Shared household workspaces and scheduled email reminders stay on a plan that funds ongoing hosting.</p></div></div>
+  <p class="plan-disclaimer">Prototype pricing only. No payment is collected; choosing a plan changes this browser’s demo state.</p>
+</section>

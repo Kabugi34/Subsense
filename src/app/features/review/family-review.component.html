@@ -1,0 +1,38 @@
+<section class="page-intro review-page-intro"><div><span class="eyebrow">THE SUBSENSE MONTHLY CHECK-IN</span><h2>Keep, review, or cancel?</h2><p>A short check-in turns upcoming renewals into a decision you can follow through on.</p></div><span class="review-cadence"><span></span> {{ familyUnlocked() ? 'Household review' : 'Personal review' }}</span></section>
+
+@if (!familyUnlocked()) {
+  <section class="family-upgrade-strip"><span class="upgrade-house-icon">⌂</span><span><strong>Make it a household decision.</strong><small>Family adds member ownership and shared decisions for up to 6 people.</small></span><button class="text-link" (click)="viewPlans.emit()">Explore Family <span>→</span></button></section>
+}
+
+<section class="review-summary-grid">
+    @if (familyUnlocked()) {
+      <article class="review-summary panel"><span>HOUSEHOLD MEMBERS</span><strong>{{ familyCount() }} <small>profiles</small></strong><div class="member-stack"><span>AM</span><span>JM</span><span>R</span>@if (familyCount() > 3) { <span>+{{ familyCount() - 3 }}</span> }</div></article>
+    } @else {
+      <article class="review-summary panel"><span>YOUR SUBSCRIPTIONS</span><strong>{{ visibleSubscriptions().length }} <small>in review</small></strong><div class="summary-foot">Personal workspace</div></article>
+    }
+    <article class="review-summary panel"><span>NEEDS A DECISION</span><strong>{{ decisions().length }} <small>subscriptions</small></strong><div class="summary-foot">{{ decisions().filter(s => s.decision === 'cancel').length }} marked to cancel</div></article>
+    <article class="review-summary savings-summary"><span>POTENTIAL MONTHLY SAVINGS</span><strong>{{ currency(monthlySavings()) }}</strong><div class="summary-foot">If marked subscriptions are cancelled</div></article>
+  </section>
+
+  <section class="panel family-review-panel">
+    <div class="family-review-heading"><div><span class="eyebrow">YOUR HOUSEHOLD REVIEW</span><h3>Make the call before renewal</h3><p>Assign an owner and choose the next step. Your savings estimate updates as you decide.</p></div><span class="review-date">This month</span></div>
+    <div class="review-list">
+      @for (item of visibleSubscriptions(); track item.id) {
+        <article class="review-item" [class.review-item-cancel]="item.decision === 'cancel'">
+          <span class="service-logo" [style.background]="item.color" [class.logo-light]="item.color === '#f1eee7'">{{ item.initial }}</span>
+          <div class="review-service"><strong>{{ item.name }}</strong><span>{{ currency(monthlyAmount(item)) }}/mo equivalent · Renews {{ item.nextCharge | date:'MMM d' }}</span></div>
+          @if (familyUnlocked()) {
+            <label class="member-select"><span>USED BY</span><select [ngModel]="item.owner ?? 'Alex'" (ngModelChange)="assign(item, $event)">@for (person of people; track person) { <option [value]="person">{{ person }}</option> }</select></label>
+          } @else { <span class="personal-owner">Just you</span> }
+          <div class="decision-buttons" role="group" [attr.aria-label]="'Decision for ' + item.name">
+            <button [class.decision-active]="item.decision === 'keep'" (click)="decide(item, 'keep')">Keep</button>
+            <button [class.decision-active]="item.decision === 'review'" (click)="decide(item, 'review')">Review</button>
+            <button [class.decision-cancel]="item.decision === 'cancel'" (click)="decide(item, 'cancel')">Cancel</button>
+          </div>
+          @if (item.decision === 'cancel') { <a class="cancel-link" [href]="item.website" target="_blank" rel="noopener noreferrer">Manage ↗</a> }
+        </article>
+      }
+    </div>
+    <div class="review-panel-footer"><span>Keep the action list handy before the next renewal.</span><button class="button button-secondary" (click)="viewPlans.emit()">Plan details</button></div>
+  </section>
+  <section class="review-win"><span>✦</span><p>Every cancellation decision can become a real monthly saving. Subsense keeps the decision, renewal date, and next action together.</p></section>
